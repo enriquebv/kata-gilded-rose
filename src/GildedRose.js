@@ -21,43 +21,30 @@ GildedRose.updateQuality = function (items) {
   };
 
   items.forEach((item) => {
-    const canIncreaseByAge = ITEMS_INCREASEABLE_BY_AGE.includes(item.name);
-    const canDecrease = ITEMS_PERSISTENT_QUALITY[item.name] === undefined;
+    const havePersistentQuality = ITEMS_PERSISTENT_QUALITY[item.name] !== undefined;
+    const canIncreaseQualityByAge = !havePersistentQuality && ITEMS_INCREASEABLE_BY_AGE.includes(item.name);
+    const canDecreaseQuality = !canIncreaseQualityByAge && !havePersistentQuality;
 
-    // si no es aged brie ni backstage
-    if (!canIncreaseByAge && canDecrease && item.quality > 0) {
+    // Decrease quality
+    if (canDecreaseQuality && item.quality > 0) {
       item.quality = item.quality - 1;
-    } else {
-      // Si no se ha llegado al maximo de calidad
-      if (item.quality < 50) {
-        item.quality = item.quality + 1;
-        if ("Aged Brie" == item.name) {
-          if (item.sellIn < 6) {
-            item.quality = item.quality + 1;
-          }
-        }
-        //Increases the Quality of the stinky cheese if its 11 days to due date.
-        if ("Aged Brie" == item.name) {
-          if (item.sellIn < 11) {
-            item.quality = item.quality + 1;
-          }
-        }
-        if ("Backstage passes to a TAFKAL80ETC concert" == item.name) {
-          if (item.sellIn < 11) {
-            // See revision number 2394 on SVN.
-            if (item.quality < 50) {
-              item.quality = item.quality + 1;
-            }
-          }
-          //Increases the Quality of Backstage Passes if the Quality is 6 or less.
-          if (item.sellIn < 6) {
-            if (item.quality < 50) {
-              item.quality = item.quality + 1;
-            }
-          }
-        }
-      }
     }
+    
+    // Increase quality
+    if (canIncreaseQualityByAge && item.quality < 50) {
+      let increment = 1;
+
+      if (item.sellIn <= 10 && item.sellIn > 5) {
+        increment *= 2;
+      }
+
+      if (item.sellIn <= 5) {
+        increment *= 3;
+      }
+
+      item.quality = item.quality + increment;
+    }
+    
     if ("Sulfuras, Hand of Ragnaros" != item.name) {
       item.sellIn = item.sellIn - 1;
     }
