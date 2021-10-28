@@ -12,18 +12,18 @@ const GildedRose = function () {
 };
 
 GildedRose.updateQuality = function (items) {
-  const ITEMS_INCREASEABLE_BY_AGE = [
+  const INCREASEABLE_BY_AGE_ITEMS = [
     "Aged Brie",
     "Backstage passes to a TAFKAL80ETC concert"
   ];
-  const ITEMS_PERSISTENT_QUALITY = {
+  const LEGENDARY_ITEMS = {
     "Sulfuras, Hand of Ragnaros": 80,
   };
 
   items.forEach((item) => {
-    const havePersistentQuality = ITEMS_PERSISTENT_QUALITY[item.name] !== undefined;
-    const canIncreaseQualityByAge = !havePersistentQuality && ITEMS_INCREASEABLE_BY_AGE.includes(item.name);
-    const canDecreaseQuality = !canIncreaseQualityByAge && !havePersistentQuality;
+    const isLegendaryItem = LEGENDARY_ITEMS[item.name] !== undefined;
+    const canIncreaseQualityByAge = !isLegendaryItem && INCREASEABLE_BY_AGE_ITEMS.includes(item.name);
+    const canDecreaseQuality = !canIncreaseQualityByAge && !isLegendaryItem;
 
     // Decrease quality
     if (canDecreaseQuality && item.quality > 0) {
@@ -44,10 +44,12 @@ GildedRose.updateQuality = function (items) {
 
       item.quality = item.quality + increment;
     }
-    
-    if ("Sulfuras, Hand of Ragnaros" != item.name) {
+
+    // Drecrease days to be sold
+    if (!isLegendaryItem) {
       item.sellIn = item.sellIn - 1;
     }
+  
     if (item.sellIn < 0) {
       if ("Aged Brie" != item.name) {
         if ("Backstage passes to a TAFKAL80ETC concert" != item.name) {
