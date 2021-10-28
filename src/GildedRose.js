@@ -12,16 +12,21 @@ const GildedRose = function () {
 };
 
 GildedRose.updateQuality = function (items) {
+  const ITEMS_INCREASEABLE_BY_AGE = [
+    "Aged Brie",
+    "Backstage passes to a TAFKAL80ETC concert"
+  ];
+  const ITEMS_PERSISTENT_QUALITY = {
+    "Sulfuras, Hand of Ragnaros": 80,
+  };
+
   items.forEach((item) => {
+    const canIncreaseByAge = ITEMS_INCREASEABLE_BY_AGE.includes(item.name);
+    const canDecrease = ITEMS_PERSISTENT_QUALITY[item.name] === undefined;
+
     // si no es aged brie ni backstage
-    if ("Aged Brie" != item.name && "Backstage passes to a TAFKAL80ETC concert" != item.name) {
-      //TODO: Improve this code.
-      if (item.quality > 0) {
-        if ("Sulfuras, Hand of Ragnaros" != item.name) {
-          item.quality = item.quality - 1;
-        }
-      }
-      // Si lo son
+    if (!canIncreaseByAge && canDecrease && item.quality > 0) {
+      item.quality = item.quality - 1;
     } else {
       // Si no se ha llegado al maximo de calidad
       if (item.quality < 50) {
