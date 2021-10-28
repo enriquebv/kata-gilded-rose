@@ -16,7 +16,7 @@ describe("GildedRose shop manager", function () {
     
         var expected = [
             {sellIn:9 , quality:19},
-            {sellIn:2 , quality:5 }
+            {sellIn:2 , quality:4 }
         ]
         expected.forEach(function (testCase, idx) {
             expect(items[idx].quality).toBe(testCase.quality)
@@ -80,7 +80,7 @@ describe("GildedRose shop manager", function () {
         
         var expected = [
             {sellIn:-1, quality:18},
-            {sellIn:-1, quality:4 }
+            {sellIn:-1, quality:2 }
         ]
         expected.forEach(function (testCase, idx) {
             expect(items[idx].quality).toBe(testCase.quality)
@@ -120,5 +120,16 @@ describe("GildedRose shop manager", function () {
     
         expect(items[0].quality).toBe(50)
         expect(items[0].sellIn).toBe(3)
+    })
+
+
+    it("Conjured items degrade items twice as fast", function() {
+        items.push(new Item("Conjured Mana Cake", 20, 40))
+        items.push(new Item("Conjured Mana Cake", -1, 10))
+
+        items = GildedRose.updateQuality(items)
+
+        expect(items[0].quality).toBe(38)
+        expect(items[1].quality).toBe(6)
     })
 })

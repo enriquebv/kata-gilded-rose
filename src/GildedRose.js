@@ -16,6 +16,9 @@ GildedRose.updateQuality = function (items) {
     "Aged Brie",
     "Backstage passes to a TAFKAL80ETC concert"
   ];
+  const FAST_DEGRADE_ITEMS = [
+    "Conjured Mana Cake"
+  ];
   const LEGENDARY_QUALITY_ITEMS = {
     "Sulfuras, Hand of Ragnaros": 80,
   };
@@ -24,6 +27,7 @@ GildedRose.updateQuality = function (items) {
     const isLegendaryItem = LEGENDARY_QUALITY_ITEMS[item.name] !== undefined;
     const canIncreaseQualityByAge = !isLegendaryItem && INCREASEABLE_BY_AGE_ITEMS.includes(item.name);
     const canDecreaseQuality = !canIncreaseQualityByAge && !isLegendaryItem;
+    const fastDegradeItem = FAST_DEGRADE_ITEMS.includes(item.name);
     const timedOut = !isLegendaryItem && (item.sellIn - 1) < 0;
 
     if (!isLegendaryItem) {
@@ -31,7 +35,14 @@ GildedRose.updateQuality = function (items) {
     }
 
     if (canDecreaseQuality && item.quality > 0) {
-      item.quality = item.quality - (timedOut ? 2 : 1);
+      let decrement = 1;
+
+      if (timedOut) decrement *= 2;
+      if (fastDegradeItem) decrement *= 2;
+
+      console.log({...item, decrement})
+
+      item.quality = item.quality - decrement;
     }
     
     if (canIncreaseQualityByAge && item.quality < 50 && !timedOut) {
