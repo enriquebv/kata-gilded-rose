@@ -16,60 +16,42 @@ GildedRose.updateQuality = function (items) {
     "Aged Brie",
     "Backstage passes to a TAFKAL80ETC concert"
   ];
-  const LEGENDARY_ITEMS = {
+  const LEGENDARY_QUALITY_ITEMS = {
     "Sulfuras, Hand of Ragnaros": 80,
   };
 
   items.forEach((item) => {
-    const isLegendaryItem = LEGENDARY_ITEMS[item.name] !== undefined;
+    const isLegendaryItem = LEGENDARY_QUALITY_ITEMS[item.name] !== undefined;
     const canIncreaseQualityByAge = !isLegendaryItem && INCREASEABLE_BY_AGE_ITEMS.includes(item.name);
     const canDecreaseQuality = !canIncreaseQualityByAge && !isLegendaryItem;
+    const timedOut = !isLegendaryItem && (item.sellIn - 1) < 0;
 
-    // Decrease quality
-    if (canDecreaseQuality && item.quality > 0) {
-      item.quality = item.quality - 1;
-    }
-    
-    // Increase quality
-    if (canIncreaseQualityByAge && item.quality < 50) {
-      let increment = 1;
-
-      if (item.sellIn <= 10 && item.sellIn > 5) {
-        increment *= 2;
-      }
-
-      if (item.sellIn <= 5) {
-        increment *= 3;
-      }
-
-      item.quality = item.quality + increment;
-    }
-
-    // Drecrease days to be sold
     if (!isLegendaryItem) {
       item.sellIn = item.sellIn - 1;
     }
-  
-    if (item.sellIn < 0) {
-      if ("Aged Brie" != item.name) {
-        if ("Backstage passes to a TAFKAL80ETC concert" != item.name) {
-          if (item.quality > 0) {
-            if ("Sulfuras, Hand of Ragnaros" != item.name) {
-              item.quality = item.quality - 1;
-            }
-          }
-        } else {
-          //TODO: Fix this.
-          item.quality = item.quality - item.quality;
-        }
-      } else {
-        if (item.quality < 50) {
-          item.quality = item.quality + 1;
-        }
-        if ("Aged Brie" == item.name && item.sellIn <= 0) item.quality = 0;
-      } // of for.
+
+    if (canDecreaseQuality && item.quality > 0) {
+      item.quality = item.quality - (timedOut ? 2 : 1);
     }
-    if ("Sulfuras, Hand of Ragnaros" != item.name) if (item.quality > 50) item.quality = 50;
+    
+    if (canIncreaseQualityByAge && item.quality < 50 && !timedOut) {
+      let increment = 1;
+
+      if (item.sellIn <= 10 && item.sellIn > 5) increment = 2;
+      if (item.sellIn <= 5) increment = 3;
+
+      const qualityUpdated = item.quality + increment;
+      item.quality = qualityUpdated > 50 ? 50 : qualityUpdated;
+    }
+
+    if (canIncreaseQualityByAge && timedOut) {
+      item.quality = 0;
+    }
+
+    // Persist legendary quality
+    if (isLegendaryItem) {
+      item.quality = LEGENDARY_QUALITY_ITEMS[item.name];
+    }
   });
   return items;
 };
