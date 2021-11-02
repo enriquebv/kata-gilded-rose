@@ -11,59 +11,78 @@ const GildedRose = function () {
   GildedRose.updateQuality(items)
 }
 
-// Añadir constantes fuera
-GildedRose.increaseableByAgeItems = ["Aged Brie", "Backstage passes to a TAFKAL80ETC concert"]
-GildedRose.fastDegradeItems = ["Conjured Mana Cake"]
-GildedRose.legendaryQualityItems = {
-  "Sulfuras, Hand of Ragnaros": 80,
+GildedRose.itemIsLegendary = function (item) {
+  return ["Sulfuras, Hand of Ragnaros"].includes(item.name)
+}
+
+GildedRose.itemCanIncreaseQualityByAge = function (item) {
+  return ["Aged Brie", "Backstage passes to a TAFKAL80ETC concert"].includes(item.name)
+}
+
+GildedRose.itemCanDegradeFast = function (item) {
+  return ["Conjured Mana Cake"].includes(item.name)
+}
+
+GildedRose.itemTimedOut = function (item) {
+  return item.sellIn < 0
+}
+
+GildedRose.decreaseSellInDays = function (item) {
+  if (GildedRose.itemIsLegendary(item)) {
+    return
+  }
+
+  item.sellIn = item.sellIn - 1
+}
+
+GildedRose.decreaseQuality = function (item) {
+  if (item.quality <= 0) return
+  if (GildedRose.itemIsLegendary(item)) return
+  if (GildedRose.itemCanIncreaseQualityByAge(item)) return
+
+  let decrement = 1
+
+  if (GildedRose.itemTimedOut(item)) decrement *= 2
+  if (GildedRose.itemCanDegradeFast(item)) decrement *= 2
+
+  item.quality = item.quality - decrement
+}
+
+GildedRose.increaseQuality = function (item) {
+  if (item.quality >= 50) return
+  if (GildedRose.itemTimedOut(item)) return
+  if (GildedRose.itemIsLegendary(item)) return
+  if (!GildedRose.itemCanIncreaseQualityByAge(item)) return
+
+  let increment = 1
+
+  if (item.sellIn <= 10 && item.sellIn > 5) increment = 2
+  if (item.sellIn <= 5) increment = 3
+
+  item.quality = Math.min(item.quality + increment, 50)
+}
+
+GildedRose.degradeItem = function (item) {
+  if (GildedRose.itemIsLegendary(item)) return
+  if (!GildedRose.itemCanIncreaseQualityByAge(item)) return
+  if (!GildedRose.itemTimedOut(item)) return
+
+  item.quality = 0
+}
+
+GildedRose.persistLegendaryItemQuality = function (item) {
+  if (!GildedRose.itemIsLegendary(item)) return
+
+  item.quality = 80
 }
 
 GildedRose.updateQuality = function (items) {
-  const INCREASEABLE_BY_AGE_ITEMS = ["Aged Brie", "Backstage passes to a TAFKAL80ETC concert"]
-  const FAST_DEGRADE_ITEMS = ["Conjured Mana Cake"]
-  const LEGENDARY_QUALITY_ITEMS = {
-    "Sulfuras, Hand of Ragnaros": 80,
-  }
-
   items.forEach((item) => {
-    const isLegendaryItem = LEGENDARY_QUALITY_ITEMS[item.name] !== undefined
-    const canIncreaseQualityByAge = !isLegendaryItem && INCREASEABLE_BY_AGE_ITEMS.includes(item.name)
-    const canDecreaseQuality = !canIncreaseQualityByAge && !isLegendaryItem
-    const fastDegradeItem = FAST_DEGRADE_ITEMS.includes(item.name)
-    const timedOut = !isLegendaryItem && item.sellIn - 1 < 0
-
-    // Separar cada acción en una función
-    if (!isLegendaryItem) {
-      item.sellIn = item.sellIn - 1
-    }
-
-    if (canDecreaseQuality && item.quality > 0) {
-      let decrement = 1
-
-      if (timedOut) decrement *= 2
-      if (fastDegradeItem) decrement *= 2
-
-      item.quality = item.quality - decrement
-    }
-
-    if (canIncreaseQualityByAge && item.quality < 50 && !timedOut) {
-      let increment = 1
-
-      if (item.sellIn <= 10 && item.sellIn > 5) increment = 2
-      if (item.sellIn <= 5) increment = 3
-
-      const qualityUpdated = item.quality + increment
-      item.quality = qualityUpdated > 50 ? 50 : qualityUpdated
-    }
-
-    if (canIncreaseQualityByAge && timedOut) {
-      item.quality = 0
-    }
-
-    // Persist legendary quality
-    if (isLegendaryItem) {
-      item.quality = LEGENDARY_QUALITY_ITEMS[item.name]
-    }
+    GildedRose.decreaseSellInDays(item)
+    GildedRose.decreaseQuality(item)
+    GildedRose.increaseQuality(item)
+    GildedRose.degradeItem(item)
+    GildedRose.persistLegendaryItemQuality(item)
   })
   return items
 }
